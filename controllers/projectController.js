@@ -1,10 +1,184 @@
-const Project = require("../model/project");
+// const Project = require("../model/projectModel");
+// const Category = require("../model/categoryModel"); // Import Category model
 
+// // Add Project
+// exports.addProject = async (req, res) => {
+//     try {
+//         const { name, figmaLink, websiteLink, adminLink, category } = req.body;
+
+//         // Make sure category exists
+//         const categoryExists = await Category.findById(category);
+//         if (!categoryExists) {
+//             return res.status(400).json({ success: false, message: "Invalid category ID" });
+//         }
+
+//         const project = await Project.create({
+//             name,
+//             figmaLink,
+//             websiteLink,
+//             adminLink,
+//             category,
+//         });
+
+//         // Populate category before sending response
+//         await project.populate("category", "name");
+
+//         res.status(201).json({ success: true, data: project });
+//     } catch (error) {
+//         res.status(500).json({ success: false, message: "Failed to add project", error });
+//     }
+// };
+
+// // Get Projects with search, filtering, pagination
+// exports.getProjects = async (req, res) => {
+//     try {
+//         const page = parseInt(req.query.page) || 1;
+//         const limit = parseInt(req.query.limit) || 10;
+//         const search = req.query.search || "";
+//         const categoryFilter = req.query.category || "All";
+
+//         const query = {};
+
+//         // Filter by category if provided
+//         if (categoryFilter && categoryFilter !== "All") {
+//             query.category = categoryFilter;
+//         }
+
+//         // Word-based search on project name or category name
+//         if (search) {
+//             const words = search.trim().split(/\s+/).filter(Boolean);
+
+//             query.$and = words.map((word) => ({
+//                 $or: [
+//                     { name: { $regex: word, $options: "i" } },
+//                     { /* category name search handled via aggregate/populate below */ },
+//                 ],
+//             }));
+//         }
+
+//         // Fetch projects and populate category
+//         const total = await Project.countDocuments(query);
+
+//         const projects = await Project.find(query)
+//             .populate("category", "name")
+//             .sort({ createdAt: -1 })
+//             .skip((page - 1) * limit)
+//             .limit(limit);
+
+//         // If search includes category words, filter after populate
+//         let filteredProjects = projects;
+//         if (search) {
+//             const words = search.trim().split(/\s+/).filter(Boolean);
+//             filteredProjects = projects.filter((project) => {
+//                 return words.every((word) =>
+//                     project.name.toLowerCase().includes(word.toLowerCase()) ||
+//                     (project.category && project.category.name.toLowerCase().includes(word.toLowerCase()))
+//                 );
+//             });
+//         }
+
+//         res.status(200).json({
+//             success: true,
+//             data: filteredProjects,
+//             pagination: {
+//                 total,
+//                 page,
+//                 limit,
+//                 totalPages: Math.ceil(total / limit),
+//                 hasPrevPage: page > 1,
+//                 hasNextPage: page < Math.ceil(total / limit),
+//             },
+//         });
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ success: false, message: "Failed to fetch projects", error });
+//     }
+// };
+
+// // Get Single Project by ID
+// exports.getProjectById = async (req, res) => {
+//     try {
+//         const project = await Project.findById(req.params.id).populate("category", "name");
+//         if (!project) {
+//             return res.status(404).json({ success: false, message: "Project not found" });
+//         }
+//         res.status(200).json({ success: true, data: project });
+//     } catch (error) {
+//         res.status(500).json({ success: false, message: "Failed to fetch project", error });
+//     }
+// };
+
+// // Update Project
+// exports.updateProject = async (req, res) => {
+//     try {
+//         const { name, figmaLink, websiteLink, adminLink, category } = req.body;
+
+//         // Check if category exists
+//         const categoryExists = await Category.findById(category);
+//         if (!categoryExists) {
+//             return res.status(400).json({ success: false, message: "Invalid category ID" });
+//         }
+
+//         const project = await Project.findByIdAndUpdate(
+//             req.params.id,
+//             { name, figmaLink, websiteLink, adminLink, category },
+//             { new: true, runValidators: true }
+//         ).populate("category", "name");
+
+//         if (!project) {
+//             return res.status(404).json({ success: false, message: "Project not found" });
+//         }
+
+//         res.status(200).json({ success: true, data: project });
+//     } catch (error) {
+//         res.status(500).json({ success: false, message: "Failed to update project", error });
+//     }
+// };
+
+// // Delete Project
+// exports.deleteProject = async (req, res) => {
+//     try {
+//         const project = await Project.findByIdAndDelete(req.params.id);
+//         if (!project) {
+//             return res.status(404).json({ success: false, message: "Project not found" });
+//         }
+//         res.status(200).json({ success: true, message: "Project deleted successfully" });
+//     } catch (error) {
+//         res.status(500).json({ success: false, message: "Failed to delete project", error });
+//     }
+// };
+
+
+
+
+
+
+
+
+
+const Project = require("../model/projectModel");
+const Category = require("../model/categoryModel");
+const Profile = require("../model/profileModel");
 
 // Add Project
 exports.addProject = async (req, res) => {
     try {
-        const { name, figmaLink, websiteLink, adminLink, category } = req.body;
+        const { name, figmaLink, websiteLink, adminLink, category, profile, orderId } = req.body;
+
+        if (!name || !figmaLink || !websiteLink || !adminLink || !category || !profile || !orderId) {
+            return res.status(400).json({ success: false, message: "All fields are required" });
+        }
+        // Validate category
+        const categoryExists = await Category.findById(category);
+        if (!categoryExists) {
+            return res.status(400).json({ success: false, message: "Invalid category ID" });
+        }
+
+        // Validate profile
+        const profileExists = await Profile.findById(profile);
+        if (!profileExists) {
+            return res.status(400).json({ success: false, message: "Invalid profile ID" });
+        }
 
         const project = await Project.create({
             name,
@@ -12,91 +186,61 @@ exports.addProject = async (req, res) => {
             websiteLink,
             adminLink,
             category,
+            profile,
+            orderId
         });
+
+        // Populate category and profile before sending response
+        await project.populate([
+            { path: "category", select: "name" },
+            { path: "profile", select: "name" }
+        ]);
+
 
         res.status(201).json({ success: true, data: project });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ success: false, message: "Failed to add project", error });
     }
 };
 
-// Get Projects with Pagination, Search & Category Filter
-// exports.getProjects = async (req, res) => {
-//     try {
-//         const page = parseInt(req.query.page) || 1;
-//         const limit = parseInt(req.query.limit) || 10;
-//         const search = req.query.search || "";
-//         const category = req.query.category || "All";
-
-//         const query = {};
-
-//         // If category is not "All", filter by category
-//         if (category && category !== "All") {
-//             query.category = category;
-//         }
-
-//         // If search exists, search in both name and category
-//         if (search) {
-//             query.$or = [
-//                 { name: { $regex: search, $options: "i" } },
-//                 { category: { $regex: search, $options: "i" } }
-//             ];
-//         }
-
-//         const total = await Project.countDocuments(query);
-
-//         const projects = await Project.find(query)
-//             .sort({ createdAt: -1 })
-//             .skip((page - 1) * limit)
-//             .limit(limit);
-
-//         res.status(200).json({
-//             success: true,
-//             data: projects,
-//             pagination: {
-//                 total,
-//                 page,
-//                 limit,
-//                 totalPages: Math.ceil(total / limit),
-//             },
-//         });
-//     } catch (error) {
-//         res.status(500).json({ success: false, message: "Failed to fetch projects", error });
-//     }
-// };
-
+// Get Projects with search, filtering, pagination
 exports.getProjects = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const search = req.query.search || "";
-        const category = req.query.category || "All";
+        const categoryFilter = req.query.category || "All";
 
         const query = {};
 
-        // Filter by category if not "All"
-        if (category && category !== "All") {
-            query.category = category;
+        // Filter by category if provided
+        if (categoryFilter && categoryFilter !== "All") {
+            query.category = categoryFilter;
         }
 
-        // Word-based search in name or category
-        if (search) {
-            const words = search.trim().split(/\s+/).filter(Boolean);
-
-            query.$and = words.map((word) => ({
-                $or: [
-                    { name: { $regex: word, $options: "i" } },
-                    { category: { $regex: word, $options: "i" } },
-                ],
-            }));
-        }
-
-        const total = await Project.countDocuments(query);
-
-        const projects = await Project.find(query)
+        // Fetch projects and populate category & profile
+        let projects = await Project.find(query)
+            .populate("category", "name")
+            .populate("profile", "name")
             .sort({ createdAt: -1 })
             .skip((page - 1) * limit)
             .limit(limit);
+
+        const total = await Project.countDocuments(query);
+
+        // Word-based search on project name, orderId, category name, or profile name
+        if (search) {
+            const words = search.trim().split(/\s+/).filter(Boolean);
+            projects = projects.filter(project =>
+                words.every(word =>
+                    project.name.toLowerCase().includes(word.toLowerCase()) ||
+                    project.orderId.toLowerCase().includes(word.toLowerCase()) ||
+                    (project.category && project.category.name.toLowerCase().includes(word.toLowerCase())) ||
+                    (project.profile && project.profile.name.toLowerCase().includes(word.toLowerCase()))
+                )
+            );
+        }
 
         res.status(200).json({
             success: true,
@@ -116,16 +260,20 @@ exports.getProjects = async (req, res) => {
     }
 };
 
-
-// Get Single Project by ID
+// Get single project by ID
 exports.getProjectById = async (req, res) => {
     try {
-        const project = await Project.findById(req.params.id);
+        const project = await Project.findById(req.params.id)
+            .populate("category", "name")
+            .populate("profile", "name");
+
         if (!project) {
             return res.status(404).json({ success: false, message: "Project not found" });
         }
+
         res.status(200).json({ success: true, data: project });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ success: false, message: "Failed to fetch project", error });
     }
 };
@@ -133,13 +281,25 @@ exports.getProjectById = async (req, res) => {
 // Update Project
 exports.updateProject = async (req, res) => {
     try {
-        const { name, figmaLink, websiteLink, adminLink, category } = req.body;
+        const { name, figmaLink, websiteLink, adminLink, category, profile, orderId } = req.body;
+
+        // Validate category
+        const categoryExists = await Category.findById(category);
+        if (!categoryExists) {
+            return res.status(400).json({ success: false, message: "Invalid category ID" });
+        }
+
+        // Validate profile
+        const profileExists = await Profile.findById(profile);
+        if (!profileExists) {
+            return res.status(400).json({ success: false, message: "Invalid profile ID" });
+        }
 
         const project = await Project.findByIdAndUpdate(
             req.params.id,
-            { name, figmaLink, websiteLink, adminLink, category },
+            { name, figmaLink, websiteLink, adminLink, category, profile, orderId },
             { new: true, runValidators: true }
-        );
+        ).populate("category", "name").populate("profile", "name");
 
         if (!project) {
             return res.status(404).json({ success: false, message: "Project not found" });
@@ -147,6 +307,7 @@ exports.updateProject = async (req, res) => {
 
         res.status(200).json({ success: true, data: project });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ success: false, message: "Failed to update project", error });
     }
 };
@@ -155,11 +316,14 @@ exports.updateProject = async (req, res) => {
 exports.deleteProject = async (req, res) => {
     try {
         const project = await Project.findByIdAndDelete(req.params.id);
+
         if (!project) {
             return res.status(404).json({ success: false, message: "Project not found" });
         }
+
         res.status(200).json({ success: true, message: "Project deleted successfully" });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ success: false, message: "Failed to delete project", error });
     }
 };

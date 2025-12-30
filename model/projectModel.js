@@ -6,12 +6,20 @@ const ProjectSchema = new mongoose.Schema(
     figmaLink: { type: String },
     websiteLink: { type: String },
     adminLink: { type: String },
-    category: { type: String, required: true },
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+      required: true
+    },
+    profile: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Profile",
+      required: true
+    },
+    orderId: { type: String, required: true },
   },
   { timestamps: true }
 );
 
-
-
 const ProjectModel = mongoose.model("Project", ProjectSchema);
-module.exports = ProjectModel
+module.exports = ProjectModel;

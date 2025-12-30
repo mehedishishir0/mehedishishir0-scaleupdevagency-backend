@@ -6,6 +6,8 @@ const { errorResponse } = require("./response/response")
 const connectDB = require("./config/dbConfig")
 const userRouter = require("./routes/userRoute")
 const projectRouter = require("./routes/projectRote")
+const categoriRouter = require("./routes/categoryRoutes")
+const profileRouter = require("./routes/profileRoutes")
 
 
 const app = express()
@@ -16,6 +18,8 @@ app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
 app.use("/api/v1/auth", userRouter)
 app.use("/api/v1/projects", projectRouter)
+app.use("/api/v1/categories", categoriRouter);
+app.use("/api/v1/profile", profileRouter);
 
 const port = process.env.PORT || 5000
 
