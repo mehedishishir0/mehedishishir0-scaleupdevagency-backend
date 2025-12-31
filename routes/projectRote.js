@@ -1,6 +1,6 @@
 const express = require("express");
 const projectRouter = express.Router();
-
+const { protected } = require("../middlewares/authMiddilewares");
 const {
   addProject,
   getProjects,
@@ -10,14 +10,14 @@ const {
 } = require("../controllers/projectController");
 
 
-projectRouter.post("/", addProject);
+projectRouter.post("/", protected, addProject);
 
 projectRouter.get("/", getProjects);
 
 projectRouter.get("/:id", getProjectById);
 
-projectRouter.put("/:id", updateProject);
+projectRouter.put("/:id", protected, updateProject);
 
-projectRouter.delete("/:id", deleteProject);
+projectRouter.delete("/:id", protected, deleteProject);
 
 module.exports = projectRouter;
