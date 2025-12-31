@@ -6,6 +6,11 @@ const ProjectSchema = new mongoose.Schema(
     figmaLink: { type: String },
     websiteLink: { type: String },
     adminLink: { type: String },
+    type:{
+      type: String,
+      enum: ["web", "app"],
+      required: true
+    },
     category: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
