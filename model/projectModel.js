@@ -21,7 +21,7 @@ const ProjectSchema = new mongoose.Schema(
       ref: "Profile",
       required: true
     },
-    orderId: { type: String, required: true },
+    
   },
   { timestamps: true }
 );
